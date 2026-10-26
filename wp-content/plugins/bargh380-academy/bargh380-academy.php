@@ -140,7 +140,7 @@ final class B380_Academy_Store {
 		if ( ! class_exists( 'WooCommerce' ) ) { return ''; }
 		$atts = shortcode_atts( array( 'product_id' => 0 ), $atts, 'b380_course_landing' );
 		$b380_course_product_id = absint( $atts['product_id'] ) ?: get_queried_object_id();
-		if ( ! self::is_course( $b380_course_product_id ) ) { return ''; }
+		if ( ! self::is_course( $b380_course_product_id ) || ( 'publish' !== get_post_status( $b380_course_product_id ) && ! current_user_can( 'edit_post', $b380_course_product_id ) ) ) { return ''; }
 		wp_enqueue_style( 'b380-academy', plugins_url( 'assets/academy.css', __FILE__ ), array(), self::VERSION );
 		wp_enqueue_style( 'b380-academy-course', plugins_url( 'assets/course.css', __FILE__ ), array( 'b380-academy' ), self::VERSION );
 		$b380_embed = true;
