@@ -26,11 +26,12 @@ $support_url = $get( 'support_url', 'tel:09922335706' );
 $support_label = $get( 'support_label', 'مشاوره خرید' );
 $video = $get( 'hero_video' );
 $background = $get( 'hero_background' );
+$brand_logo = $get( 'brand_logo', B380_Academy_Store::brand_logo_url() );
 
 if ( empty( $b380_embed ) ) { get_header(); }
 ?>
 <<?php echo empty( $b380_embed ) ? 'main' : 'div'; ?> class="b380-academy b380-course-landing<?php echo ! empty( $b380_embed ) ? ' b380-course-landing--embed' : ''; ?>" id="<?php echo empty( $b380_embed ) ? 'content' : 'b380-course-content'; ?>" dir="rtl" style="--course-accent:<?php echo esc_attr( $accent ); ?>;--course-secondary:<?php echo esc_attr( $accent_secondary ); ?>;<?php echo $background ? '--course-background:url(&quot;' . esc_url( $background ) . '&quot;);' : ''; ?>">
-	<nav class="b380-course-landing__topnav" aria-label="ناوبری آکادمی"><a class="b380-course-landing__topbrand" href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>">B <span>آکادمی برق ۳۸۰</span></a><a href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>"><?php echo esc_html( $get( 'all_courses_label', 'همهٔ دوره‌ها' ) ); ?></a><a href="<?php echo esc_url( wc_get_cart_url() ); ?>"><?php echo esc_html( $get( 'cart_label', 'سبد خرید' ) ); ?></a></nav>
+	<nav class="b380-course-landing__topnav" aria-label="ناوبری آکادمی"><a class="b380-course-landing__topbrand" href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>"><?php if ( $brand_logo ) : ?><img src="<?php echo esc_url( $brand_logo ); ?>" alt="لوگوی برق ۳۸۰" loading="eager"><?php else : ?><b class="b380-course-landing__brand-mark">B</b><?php endif; ?><span>آکادمی برق ۳۸۰</span></a><a href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>"><?php echo esc_html( $get( 'all_courses_label', 'همهٔ دوره‌ها' ) ); ?></a><a href="<?php echo esc_url( wc_get_cart_url() ); ?>"><?php echo esc_html( $get( 'cart_label', 'سبد خرید' ) ); ?></a></nav>
 	<div class="b380-course-landing__wrap">
 		<?php wc_print_notices(); ?>
 		<section class="b380-course-landing__hero" id="b380-course-intro" aria-labelledby="b380-course-title">

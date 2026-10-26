@@ -4,7 +4,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="b380-academy" dir="rtl">
 	<div class="b380-academy__shell">
 		<nav class="b380-academy__nav" aria-label="ناوبری آکادمی">
-			<a class="b380-academy__brand" href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>"><span class="b380-academy__brand-mark">B</span><span>آکادمی <b>برق ۳۸۰</b></span></a>
+			<a class="b380-academy__brand" href="<?php echo esc_url( B380_Academy_Store::academy_url() ); ?>"><?php if ( B380_Academy_Store::brand_logo_url() ) : ?><img src="<?php echo esc_url( B380_Academy_Store::brand_logo_url() ); ?>" alt="لوگوی برق ۳۸۰" loading="eager"><?php else : ?><span class="b380-academy__brand-mark">B</span><?php endif; ?><span>آکادمی <b>برق ۳۸۰</b></span></a>
 			<div class="b380-academy__nav-links">
 				<a href="<?php echo esc_url( home_url( '/' ) ); ?>">سایت برق ۳۸۰</a>
 				<a href="#b380-courses">دوره‌ها</a>

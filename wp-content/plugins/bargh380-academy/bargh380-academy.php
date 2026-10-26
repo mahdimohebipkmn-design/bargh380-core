@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bargh380 Academy Store
  * Description: A focused, RTL WooCommerce storefront for Bargh380 training courses.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Requires at least: 6.2
  * Requires PHP: 7.4
  * Text Domain: bargh380-academy
@@ -11,7 +11,12 @@
 defined( 'ABSPATH' ) || exit;
 
 final class B380_Academy_Store {
-	const VERSION = '0.3.0';
+	const VERSION = '0.3.1';
+
+	public static function brand_logo_url() {
+		$logo = wp_get_attachment_image_url( 13601, 'medium' );
+		return $logo ? $logo : '';
+	}
 	const ACADEMY_PAGE_OPTION = 'b380_academy_page_id';
 	const CATEGORY_OPTION = 'b380_academy_category_id';
 

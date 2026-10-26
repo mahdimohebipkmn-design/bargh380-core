@@ -15,6 +15,7 @@ final class B380_Academy_Course_Meta {
 	public static function groups() {
 		return array(
 			'hero' => array( 'title' => '۱. بخش آغازین و ثبت‌نام', 'fields' => array(
+				'brand_logo' => array( 'label' => 'لوگوی سربرگ این دوره', 'type' => 'image', 'hint' => 'در نبود مقدار، لوگوی طلایی برق ۳۸۰ نمایش داده می‌شود. تصویر را از کتابخانه رسانه انتخاب کنید.' ),
 				'eyebrow' => array( 'label' => 'برچسب بالای عنوان', 'type' => 'text' ),
 				'hero_title' => array( 'label' => 'عنوان اصلی', 'type' => 'text', 'hint' => 'اگر خالی باشد، نام محصول نمایش داده می‌شود.' ),
 				'hero_subtitle' => array( 'label' => 'زیرعنوان', 'type' => 'textarea', 'hint' => 'اگر خالی باشد، توضیح کوتاه محصول نمایش داده می‌شود.' ),
