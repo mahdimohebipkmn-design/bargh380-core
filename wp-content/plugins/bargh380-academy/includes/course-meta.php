@@ -37,7 +37,7 @@ final class B380_Academy_Course_Meta {
 			'curriculum' => array( 'title' => '۳. سرفصل‌ها و مخاطبان', 'fields' => array(
 				'learning_title' => array( 'label' => 'عنوان سرفصل‌ها', 'type' => 'text' ),
 				'learning_subtitle' => array( 'label' => 'توضیح کوتاه سرفصل‌ها', 'type' => 'textarea' ),
-				'learning_cards' => array( 'label' => 'کارت‌های سرفصل', 'type' => 'lines', 'hint' => 'هر سطر: آیکون | عنوان | توضیح. در نبود آن، سرفصل‌های محصول به کار می‌رود.' ),
+				'chapters' => array( 'label' => 'فصل‌ها و سرفصل‌ها', 'type' => 'chapters', 'hint' => 'هر تعداد فصل لازم دارید اضافه کنید. برای هر کادر، عنوان، توضیح و تصویر یا کد SVG جداگانه وارد کنید.' ),
 				'audience_title' => array( 'label' => 'عنوان مخاطبان', 'type' => 'text' ),
 				'audience_icon' => array( 'label' => 'آیکون هر مخاطب مناسب', 'type' => 'text' ),
 				'audience_items' => array( 'label' => 'این دوره برای چه کسانی است؟', 'type' => 'lines', 'hint' => 'هر سطر یک مورد.' ),
@@ -69,6 +69,7 @@ final class B380_Academy_Course_Meta {
 				'support_url' => array( 'label' => 'نشانی دکمه مشاوره', 'type' => 'url', 'hint' => 'مانند tel:09922335706 یا لینک صفحه تماس.' ),
 			) ),
 			'labels' => array( 'title' => '۶. ریزنوشته‌ها و متن ناوبری', 'fields' => array(
+				'elementor_mode' => array( 'label' => 'نمایش چیدمان المنتور', 'type' => 'checkbox', 'hint' => 'پس از قرار دادن ابزارک «برگه دوره آکادمی» در ویرایشگر المنتور، این گزینه را فعال کنید. در حالت غیرفعال، قالب آمادهٔ افزونه نمایش داده می‌شود.' ),
 				'price_label' => array( 'label' => 'برچسب قیمت', 'type' => 'text' ),
 				'promise_kicker' => array( 'label' => 'برچسب بخش ویژگی‌ها', 'type' => 'text' ),
 				'overview_kicker' => array( 'label' => 'برچسب معرفی', 'type' => 'text' ),
@@ -128,6 +129,41 @@ final class B380_Academy_Course_Meta {
 		return $result;
 	}
 
+	public static function chapters( $product_id ) {
+		if ( metadata_exists( 'post', $product_id, self::PREFIX . 'chapters' ) ) {
+			$chapters = get_post_meta( $product_id, self::PREFIX . 'chapters', true );
+			return is_array( $chapters ) ? $chapters : array();
+		}
+		$legacy = self::icon_lines( self::get( $product_id, 'learning_cards' ) );
+		if ( ! $legacy ) {
+			$legacy = array_map( static function ( $title ) { return array( '✦', $title, '' ); }, self::lines( get_post_meta( $product_id, '_b380_course_syllabus', true ) ) );
+		}
+		return array_map( static function ( $item ) {
+			return array( 'icon' => $item[0], 'title' => $item[1], 'description' => $item[2], 'image' => '', 'svg' => '' );
+		}, $legacy );
+	}
+
+	private static function render_chapter( $chapter, $index ) {
+		$chapter = wp_parse_args( $chapter, array( 'icon' => '', 'title' => '', 'description' => '', 'image' => '', 'svg' => '' ) );
+		$base = 'b380_course_chapters[' . $index . ']';
+		echo '<div class="b380-admin-chapter" data-chapter><div class="b380-admin-chapter__top"><strong>فصل <span data-chapter-number>' . esc_html( $index + 1 ) . '</span></strong><button type="button" class="button-link-delete" data-remove-chapter>حذف فصل</button></div>';
+		foreach ( array( 'title' => 'عنوان فصل', 'description' => 'توضیحات فصل', 'icon' => 'نماد کوتاه، در نبود تصویر/SVG', 'image' => 'نشانی تصویر یا فایل SVG', 'svg' => 'کد SVG اختیاری' ) as $key => $label ) {
+			$name = $base . '[' . $key . ']';
+			echo '<label class="b380-admin-chapter__field"><span>' . esc_html( $label ) . '</span>';
+			if ( in_array( $key, array( 'description', 'svg' ), true ) ) {
+				echo '<textarea name="' . esc_attr( $name ) . '" rows="' . ( 'svg' === $key ? 4 : 2 ) . '" dir="' . ( 'svg' === $key ? 'ltr' : 'rtl' ) . '">' . esc_textarea( $chapter[ $key ] ) . '</textarea>';
+			} else {
+				echo '<div class="b380-admin-input-row"><input type="text" name="' . esc_attr( $name ) . '" value="' . esc_attr( $chapter[ $key ] ) . '" class="regular-text"' . ( 'image' === $key ? ' dir="ltr"' : '' ) . '>';
+				if ( 'image' === $key ) {
+					echo '<button type="button" class="button b380-admin-media" data-media-type="image">انتخاب از رسانه</button>';
+				}
+				echo '</div>';
+			}
+			echo '</label>';
+		}
+		echo '</div>';
+	}
+
 	public static function add_box() {
 		add_meta_box( 'b380-academy-course-settings', 'طراحی برگه دوره آکادمی', array( __CLASS__, 'render_box' ), 'product', 'normal', 'default' );
 	}
@@ -142,6 +178,20 @@ final class B380_Academy_Course_Meta {
 				$name  = 'b380_course_meta[' . esc_attr( $key ) . ']';
 				$id    = 'b380-course-' . esc_attr( $key );
 				$type  = $field['type'];
+				if ( 'chapters' === $type ) {
+					echo '<div class="b380-admin-field b380-admin-field--wide"><strong>' . esc_html( $field['label'] ) . '</strong><p class="description">' . esc_html( $field['hint'] ) . '</p><input type="hidden" name="b380_course_chapters_present" value="1"><div class="b380-admin-chapters" data-chapters>';
+					foreach ( self::chapters( $post->ID ) as $index => $chapter ) {
+						self::render_chapter( $chapter, $index );
+					}
+					echo '</div><button type="button" class="button button-secondary" data-add-chapter>+ افزودن فصل</button><template id="b380-chapter-template">';
+					self::render_chapter( array(), 999999 );
+					echo '</template></div>';
+					continue;
+				}
+				if ( 'checkbox' === $type ) {
+					echo '<div class="b380-admin-field b380-admin-field--wide"><label><input type="hidden" name="' . esc_attr( $name ) . '" value="0"><input type="checkbox" name="' . esc_attr( $name ) . '" value="1"' . checked( $value, '1', false ) . '> ' . esc_html( $field['label'] ) . '</label><p class="description">' . esc_html( $field['hint'] ) . '</p></div>';
+					continue;
+				}
 				$wide  = in_array( $type, array( 'textarea', 'lines', 'image', 'video' ), true );
 				echo '<div class="b380-admin-field' . ( $wide ? ' b380-admin-field--wide' : '' ) . '"><label for="' . esc_attr( $id ) . '">' . esc_html( $field['label'] ) . '</label>';
 				if ( in_array( $type, array( 'textarea', 'lines' ), true ) ) {
@@ -179,6 +229,8 @@ final class B380_Academy_Course_Meta {
 				$raw = trim( $submitted[ $key ] );
 				if ( 'color' === $field['type'] ) {
 					$value = sanitize_hex_color( $raw );
+				} elseif ( 'checkbox' === $field['type'] ) {
+					$value = '1' === $raw ? '1' : '0';
 				} elseif ( in_array( $field['type'], array( 'url', 'image', 'video' ), true ) ) {
 					$value = esc_url_raw( $raw, 'url' === $field['type'] ? array( 'http', 'https', 'tel' ) : array( 'http', 'https' ) );
 				} elseif ( in_array( $field['type'], array( 'textarea', 'lines' ), true ) ) {
@@ -189,6 +241,40 @@ final class B380_Academy_Course_Meta {
 				update_post_meta( $post_id, self::PREFIX . $key, $value );
 			}
 		}
+		if ( isset( $_POST['b380_course_chapters_present'] ) ) {
+			$rows = isset( $_POST['b380_course_chapters'] ) && is_array( $_POST['b380_course_chapters'] ) ? wp_unslash( $_POST['b380_course_chapters'] ) : array();
+			$chapters = array();
+			foreach ( $rows as $row ) {
+				if ( ! is_array( $row ) ) { continue; }
+				$title = sanitize_text_field( $row['title'] ?? '' );
+				if ( '' === $title ) { continue; }
+				$chapters[] = array(
+					'title' => $title,
+					'description' => sanitize_textarea_field( $row['description'] ?? '' ),
+					'icon' => sanitize_text_field( $row['icon'] ?? '' ),
+					'image' => esc_url_raw( $row['image'] ?? '' ),
+					'svg' => self::sanitize_svg( $row['svg'] ?? '' ),
+				);
+			}
+			update_post_meta( $post_id, self::PREFIX . 'chapters', $chapters );
+		}
+	}
+
+	public static function sanitize_svg( $svg ) {
+		$svg = trim( (string) $svg );
+		if ( '' === $svg || false === stripos( $svg, '<svg' ) ) { return ''; }
+		$allowed = array(
+			'svg' => array( 'xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'role' => true, 'aria-hidden' => true ),
+			'g' => array( 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'transform' => true ),
+			'path' => array( 'd' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'transform' => true ),
+			'circle' => array( 'cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true ),
+			'rect' => array( 'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true ),
+			'line' => array( 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true, 'stroke-width' => true ),
+			'polyline' => array( 'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true ),
+			'polygon' => array( 'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true ),
+			'ellipse' => array( 'cx' => true, 'cy' => true, 'rx' => true, 'ry' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true ),
+		);
+		return wp_kses( $svg, $allowed );
 	}
 
 	public static function admin_assets( $hook ) {

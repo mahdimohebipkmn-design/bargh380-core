@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bargh380 Academy Store
  * Description: A focused, RTL WooCommerce storefront for Bargh380 training courses.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Requires at least: 6.2
  * Requires PHP: 7.4
  * Text Domain: bargh380-academy
@@ -11,12 +11,14 @@
 defined( 'ABSPATH' ) || exit;
 
 final class B380_Academy_Store {
-	const VERSION = '0.2.0';
+	const VERSION = '0.3.0';
 	const ACADEMY_PAGE_OPTION = 'b380_academy_page_id';
 	const CATEGORY_OPTION = 'b380_academy_category_id';
 
 	public static function boot() {
 		add_shortcode( 'b380_academy', array( __CLASS__, 'catalog' ) );
+		add_shortcode( 'b380_course_landing', array( __CLASS__, 'course_shortcode' ) );
+		add_action( 'elementor/widgets/register', array( __CLASS__, 'register_elementor_widget' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( __CLASS__, 'course_template' ), 999 );
 		add_filter( 'woocommerce_product_single_add_to_cart_text', array( __CLASS__, 'course_cart_text' ) );
@@ -117,12 +119,34 @@ final class B380_Academy_Store {
 
 	public static function course_template( $template ) {
 		if ( class_exists( 'WooCommerce' ) && function_exists( 'is_product' ) && is_product() && self::is_course( get_queried_object_id() ) ) {
+			if ( '1' === B380_Academy_Course_Meta::get( get_queried_object_id(), 'elementor_mode' ) || ( current_user_can( 'edit_post', get_queried_object_id() ) && isset( $_GET['elementor-preview'] ) ) ) {
+				return $template;
+			}
 			$course_template = plugin_dir_path( __FILE__ ) . 'templates/single-course.php';
 			if ( file_exists( $course_template ) ) {
 				return $course_template;
 			}
 		}
 		return $template;
+	}
+
+	public static function register_elementor_widget( $widgets_manager ) {
+		if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) { return; }
+		require_once plugin_dir_path( __FILE__ ) . 'includes/elementor-widget.php';
+		$widgets_manager->register( new B380_Academy_Elementor_Widget() );
+	}
+
+	public static function course_shortcode( $atts ) {
+		if ( ! class_exists( 'WooCommerce' ) ) { return ''; }
+		$atts = shortcode_atts( array( 'product_id' => 0 ), $atts, 'b380_course_landing' );
+		$b380_course_product_id = absint( $atts['product_id'] ) ?: get_queried_object_id();
+		if ( ! self::is_course( $b380_course_product_id ) ) { return ''; }
+		wp_enqueue_style( 'b380-academy', plugins_url( 'assets/academy.css', __FILE__ ), array(), self::VERSION );
+		wp_enqueue_style( 'b380-academy-course', plugins_url( 'assets/course.css', __FILE__ ), array( 'b380-academy' ), self::VERSION );
+		$b380_embed = true;
+		ob_start();
+		include plugin_dir_path( __FILE__ ) . 'templates/single-course.php';
+		return ob_get_clean();
 	}
 
 	public static function course_cart_text( $text ) {

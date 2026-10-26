@@ -12,4 +12,13 @@
 .b380-admin-field .description{margin:5px 0 0;line-height:1.6}
 .b380-admin-preview{display:block;max-width:220px;max-height:120px;object-fit:cover;margin-top:8px;border-radius:7px}
 .b380-admin-preview[hidden]{display:none}
+.b380-admin-chapters{display:grid;gap:14px;margin:12px 0}
+.b380-admin-chapter{padding:16px;border:1px solid #d4e4db;border-radius:12px;background:#f8fcfa;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.b380-admin-chapter__top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dbe9e1;padding-bottom:9px}
+.b380-admin-chapter__field{display:block;min-width:0}
+.b380-admin-chapter__field:nth-last-child(2),.b380-admin-chapter__field:last-child{grid-column:1/-1}
+.b380-admin-chapter__field span{display:block;font-weight:600;margin-bottom:6px}
+.b380-admin-chapter__field input,.b380-admin-chapter__field textarea{width:100%;max-width:none}
+.b380-admin-chapter__field textarea[dir=ltr]{font-family:monospace;font-size:12px}
 @media(max-width:782px){.b380-admin-grid{grid-template-columns:1fr}.b380-admin-field{grid-column:1/-1}}
+@media(max-width:782px){.b380-admin-chapter{grid-template-columns:1fr}.b380-admin-chapter__field{grid-column:1/-1}}

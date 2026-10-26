@@ -17,4 +17,20 @@ jQuery(function ($) {
 		});
 		frame.open();
 	});
+	$(document).on('click', '[data-add-chapter]', function () {
+		const list = $('[data-chapters]');
+		const index = Date.now();
+		const template = $('#b380-chapter-template').html().replaceAll('999999', String(index));
+		list.append(template);
+		list.children('[data-chapter]').last().find('[name$="[title]"]').trigger('focus');
+		list.children('[data-chapter]').each(function (position) {
+			$(this).find('[data-chapter-number]').text(position + 1);
+		});
+	});
+	$(document).on('click', '[data-remove-chapter]', function () {
+		$(this).closest('[data-chapter]').remove();
+		$('[data-chapters]').children('[data-chapter]').each(function (position) {
+			$(this).find('[data-chapter-number]').text(position + 1);
+		});
+	});
 });
