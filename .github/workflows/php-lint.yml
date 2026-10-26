@@ -1,0 +1,17 @@
+name: PHP syntax
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Lint plugin PHP
+        run: find wp-content/plugins/bargh380-academy -name '*.php' -print0 | xargs -0 -n1 php -l
