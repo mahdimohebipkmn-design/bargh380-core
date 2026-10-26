@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bargh380 Academy Store
  * Description: A focused, RTL WooCommerce storefront for Bargh380 training courses.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Requires at least: 6.2
  * Requires PHP: 7.4
  * Text Domain: bargh380-academy
@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 final class B380_Academy_Store {
-	const VERSION = '0.1.0';
+	const VERSION = '0.2.0';
 	const ACADEMY_PAGE_OPTION = 'b380_academy_page_id';
 	const CATEGORY_OPTION = 'b380_academy_category_id';
 
@@ -19,9 +19,9 @@ final class B380_Academy_Store {
 		add_shortcode( 'b380_academy', array( __CLASS__, 'catalog' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_filter( 'template_include', array( __CLASS__, 'course_template' ), 999 );
+		add_filter( 'woocommerce_product_single_add_to_cart_text', array( __CLASS__, 'course_cart_text' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'dependency_notice' ) );
-		add_action( 'woocommerce_product_options_general_product_data', array( __CLASS__, 'course_fields' ) );
-		add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_course_fields' ) );
+		B380_Academy_Course_Meta::boot();
 	}
 
 	public static function activate() {
@@ -109,6 +109,9 @@ final class B380_Academy_Store {
 		$page_id = (int) get_option( self::ACADEMY_PAGE_OPTION );
 		if ( ( $page_id && is_page( $page_id ) ) || ( function_exists( 'is_product' ) && is_product() && self::is_course( get_queried_object_id() ) ) ) {
 			wp_enqueue_style( 'b380-academy', plugins_url( 'assets/academy.css', __FILE__ ), array(), self::VERSION );
+			if ( function_exists( 'is_product' ) && is_product() && self::is_course( get_queried_object_id() ) ) {
+				wp_enqueue_style( 'b380-academy-course', plugins_url( 'assets/course.css', __FILE__ ), array( 'b380-academy' ), self::VERSION );
+			}
 		}
 	}
 
@@ -120,6 +123,14 @@ final class B380_Academy_Store {
 			}
 		}
 		return $template;
+	}
+
+	public static function course_cart_text( $text ) {
+		global $product;
+		if ( $product && self::is_course( $product->get_id() ) ) {
+			return B380_Academy_Course_Meta::get( $product->get_id(), 'cta_label', 'ثبت‌نام و شروع یادگیری' );
+		}
+		return $text;
 	}
 
 	public static function catalog() {
@@ -207,35 +218,8 @@ final class B380_Academy_Store {
 		<?php
 	}
 
-	public static function course_fields() {
-		global $product_object;
-		if ( ! $product_object || ! self::is_course( $product_object->get_id() ) ) {
-			return;
-		}
-		echo '<div class="options_group">';
-		foreach ( array(
-			'_b380_course_duration' => 'مدت دوره',
-			'_b380_course_level' => 'سطح دوره',
-			'_b380_course_instructor' => 'مدرس',
-		) as $id => $label ) {
-			woocommerce_wp_text_input( array( 'id' => $id, 'label' => $label ) );
-		}
-		woocommerce_wp_textarea_input( array( 'id' => '_b380_course_syllabus', 'label' => 'سرفصل‌ها (هر سطر یک مورد)' ) );
-		echo '</div>';
-	}
-
-	public static function save_course_fields( $product ) {
-		if ( ! self::is_course( $product->get_id() ) ) {
-			return;
-		}
-		foreach ( array( '_b380_course_duration', '_b380_course_level', '_b380_course_instructor', '_b380_course_syllabus' ) as $key ) {
-			if ( isset( $_POST[ $key ] ) ) {
-				$value = wp_unslash( $_POST[ $key ] );
-				$product->update_meta_data( $key, '_b380_course_syllabus' === $key ? sanitize_textarea_field( $value ) : sanitize_text_field( $value ) );
-			}
-		}
-	}
 }
 
+require_once plugin_dir_path( __FILE__ ) . 'includes/course-meta.php';
 add_action( 'plugins_loaded', array( 'B380_Academy_Store', 'boot' ) );
 register_activation_hook( __FILE__, array( 'B380_Academy_Store', 'activate' ) );
